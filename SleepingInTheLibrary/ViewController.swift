@@ -67,7 +67,42 @@ class ViewController: UIViewController {
             }
             
             if error == nil {
-                print(data!)
+                
+                
+                if let data = data {
+                    let parsedResult: AnyObject!
+                    
+                    do {
+                        parsedResult = try NSJSONSerialization.JSONObjectWithData(data, options: .AllowFragments)
+                    } catch {
+                        displayError("Could not parse the data as JSON: '\(data)'")
+                        return
+                    }
+                    
+                    if let photosDictionary = parsedResult[Constants.FlickrResponseKeys.Photos] as? [String: AnyObject],
+                        photoArray = photosDictionary["photo"] as? [[String: AnyObject]]{
+                        
+                        let randomPhotoIndex = Int(arc4random_uniform(UInt32(photoArray.count)))
+                        let photoDictionary = photoArray[randomPhotoIndex] as [String: AnyObject]
+                        
+                        if let imageUrlString = photoDictionary[Constants.FlickrResponseKeys.MediumURL] as? String,
+                            let photoTitle = photoDictionary[Constants.FlickrResponseKeys.Title] as? String {
+                            
+                            let imageURL = NSURL(string: imageUrlString)
+                            if let imageData = NSData(contentsOfURL: imageURL!) {
+                                performUIUpdatesOnMain() {
+                                    self.photoImageView.image = UIImage(data: imageData)
+                                    self.photoTitleLabel.text = photoTitle
+                                    self.setUIEnabled(true)
+                                }
+                                
+                            }
+                            
+                        }
+                        
+                    }
+                    
+                }
             }
         }
         
